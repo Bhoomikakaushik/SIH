@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import "../App.css";
-import Navbar from "./Navbar";
 import Header from "./HeaderComponents/Header";
 
 const SmartAssistant = () => {
@@ -28,25 +27,26 @@ const SmartAssistant = () => {
   };
 
   return (
-    <div className="chat-container">
-        {/* <Navbar/> */}
-        <Header/>
-      <div className="chat-box">
-        {messages.map((msg, index) => (
-          <div key={index} className={`message ${msg.sender}`}>
-            {msg.text}
-          </div>
-        ))}
-      </div>
-      <div className="chat-input">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Type a message..."
-        />
-        <button onClick={handleSend}>Send</button>
+    <div>
+      <Header/>
+      <div className="chat-container">
+        <div className="chat-box">
+          {messages.map((msg, index) => (
+            <div key={index} className={`message ${msg.sender}`}>
+              {msg.text}
+            </div>
+          ))}
+        </div>
+        <div className="chat-input">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            placeholder="Type a message..."
+          />
+          <button onClick={handleSend}>Send</button>
+        </div>
       </div>
     </div>
   );

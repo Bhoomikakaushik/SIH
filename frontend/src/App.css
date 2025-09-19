@@ -474,7 +474,7 @@ Vacancies section */
 .profile-container h2 {
   font-size: 22px;
   color: #333;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 /* Tabs */
@@ -556,7 +556,7 @@ Vacancies section */
 .profile-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 10px;
 }
 
 .profile-form input,
@@ -567,6 +567,14 @@ Vacancies section */
   font-size: 14px;
   width: 100%;
   transition: all 0.2s ease;
+  color: #333; 
+  background-color: #fff;
+}
+
+.profile-label{
+  color:#000;
+  font-weight: 600;
+  margin:0;
 }
 
 .profile-form input:focus,
@@ -686,9 +694,10 @@ Vacancies section */
   min-height: 100vh;
   max-width: 1200px;
   margin: 0 auto;
-  padding-top: 90px; /* header spacing */
-  padding-left: 1rem;
-  padding-right: 1rem;
+  /* padding-top: 90px;  */
+  /* padding-left: 1rem;
+  padding-right: 1rem; */
+  padding: 1rem;
   box-sizing: border-box;
 }
 
@@ -749,8 +758,9 @@ Vacancies section */
   flex: 1;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
+  gap: 1.5rem;
   width: 100%;
+  padding:2rem;
 }
 
 /* 🔹 Internship card */
@@ -778,16 +788,16 @@ Vacancies section */
   margin-bottom: 12px;
 }
 
-.card-header h3 {
-  font-size: 1.25rem;
+.card-header div h3 {
+  font-size: 1.20rem;
   font-weight: 600;
   color: #052657;
 }
 
-.company-name {
-  font-size: 0.9rem;
+p.company-name {
+  font-size: 0.75rem;
   color: #555;
-  margin-top: 4px;
+  margin-top: 1rem;
 }
 
 .card-meta {
@@ -795,7 +805,8 @@ Vacancies section */
   align-items: center;
   gap: 10px;
   font-size: 0.85rem;
-  margin-top: 8px;
+  margin:1rem;
+  margin-bottom: 0;
   color: #444;
 }
 
@@ -811,9 +822,9 @@ Vacancies section */
 .match-score strong {
   font-size: 1.3rem;
 }
-.match-label {
-  font-size: 0.75rem;
-  color: #666;
+p.match-label {
+  font-size: 0.8rem;
+  color: #3b82f6;
 }
 
 /* 🔹 Skills progress bar */
@@ -925,14 +936,14 @@ Vacancies section */
   min-width: unset; /* ✅ no forced width */
 }
 @media (max-width: 768px) {
-  .filters {
-    flex-direction: row;
+  div.filters {
+    flex-direction: column;
     /* align-items: stretch; */
   }
 
-  .filters .input-icon {
+  /* .filters .input-icon {
     width: 50%; 
-  }
+  } */
 
   .filters input,
   .filters select {
@@ -1397,12 +1408,12 @@ form select:focus {
 }
 
 .tag {
-  background: hsla(35, 93%, 72%, 0.826);
-  color: rgb(252, 251, 251);
-  padding: 6px 12px;
+  background: hsla(26, 100%, 84%, 0.556);
+  color:  rgb(95, 34, 8);
+  padding: 5px 10px;
   border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
 .rural-note {
@@ -1436,7 +1447,8 @@ form select:focus {
 
 .profile-container {
   max-width: 800px;
-  margin: 80px auto;
+  /* margin: 80px auto; */
+  margin-bottom: 2rem;
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
@@ -1501,6 +1513,7 @@ form select:focus {
 
 .button-container button {
   padding: 10px 20px;
+  margin-bottom: 1rem;
   background: linear-gradient(to right, #3b82f6, #f97316);
   color: rgb(72, 70, 70);
   border: none;
@@ -1550,7 +1563,7 @@ form select:focus {
   .profile-container {
     width: 100%;
     max-width: 100%;
-    margin: 120px 5px;
+    /* margin: 120px 5px; */
     padding: 20px 15px;
     box-shadow: none;
     border-radius: 0;
@@ -1604,11 +1617,13 @@ form select:focus {
   }
 
   .apply-btn {
-    width: 30%;
+    /* width: 30%; */
+    width: 100%;
     padding: 10px;
-    font-size: 14px;
+    font-size: 0.8rem;
     display: flex;
     justify-content: center;
+    margin-top:1rem;
   }
 }
 
@@ -1702,4 +1717,25 @@ form select:focus {
 }
 .apply-btn:hover{
   background: linear-gradient(135deg, #c2410c, #ea580c);
+}
+
+
+
+/* .fullscreen-card {
+  width: 100vw;
+  height: 100vh;
+  background: #fff;
+  border-radius: 0;
+  padding: 20px;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+} */
+
+
+@media (max-width: 600px){
+  .discover-container{
+    gap:2rem;
+  }
 }

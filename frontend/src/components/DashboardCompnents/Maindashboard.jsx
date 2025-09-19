@@ -1,82 +1,101 @@
+import { useState, useEffect, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx";
-// import { Button } from "@/components/ui/button";
-import  Progress  from "../ui/progress.jsx";
+import Progress from "../ui/progress.jsx";
 import { Badge } from "../ui/badge.jsx";
-import { 
-  Users, 
-  Building2, 
-  MapPin, 
-  Star, 
-  TrendingUp, 
+import {
+  Users,
+  Building2,
+  MapPin,
+  Star,
+  TrendingUp,
   Filter,
   Search,
-  Zap
+  Zap,
 } from "lucide-react";
 import "./MainDashboard.css";
-import { useContext } from "react";
 import { AuthContext } from "../../AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
 
+// 🔹 Convert backend final_score (0–1) to % 
+const normalizeScore = (score) => Math.round(score * 100);
 
 const MainDashboard = () => {
-  const topMatches = [
-    {
-      id: 1,
-      company: "Tech Innovators Pvt Ltd",
-      position: "Software Development Intern",
-      location: "Bangalore, Karnataka",
-      matchScore: 96,
-      sector: "Technology",
-      skills: ["React", "Python", "Machine Learning"],
-      diversity: "Rural Background Preferred",
-      stipend: "₹25,000/month"
-    },
-    {
-      id: 2,
-      company: "Green Energy Solutions",
-      position: "Renewable Energy Research Intern",
-      location: "Pune, Maharashtra", 
-      matchScore: 89,
-      sector: "Energy",
-      skills: ["Data Analysis", "Environmental Science", "R"],
-      diversity: "Female Candidate Priority",
-      stipend: "₹20,000/month"
-    },
-    {
-      id: 3,
-      company: "FinTech Dynamics",
-      position: "Financial Analytics Intern",
-      location: "Mumbai, Maharashtra",
-      matchScore: 84,
-      sector: "Finance",
-      skills: ["Excel", "SQL", "Financial Modeling"],
-      diversity: "SC/ST Category",
-      stipend: "₹30,000/month"
-    }
-  ];
-
+  const [topMatches, setTopMatches] = useState([]);
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  // Fetch internships from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://127.0.0.1:8000/search/internships", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const recs = data.recommendations || data;
+
+        if (!Array.isArray(recs)) {
+          console.error("❌ Backend did not return an array:", recs);
+          setTopMatches([]);
+          return;
+        }
+
+        // format into dashboard-style cards
+        const formatted = recs.map((rec, index) => ({
+          id: index + 1,
+          company: rec.company_name,
+          position: rec.title,
+          location: rec.location,
+          matchScore: normalizeScore(rec.final_score || 0),
+          sector: rec.domain,
+          skills: rec.skills ? rec.skills.split(",") : [],
+          diversity: rec.reservation_status
+            ? "Reservation Benefits Available"
+            : "General",
+          stipend: rec.stipend || "N/A",
+        }));
+
+        setTopMatches(formatted);
+      } catch (error) {
+        console.error("❌ Error fetching internships:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <section className="dashboard">
       <div className="dashboard-container">
-        
+        {/* Greeting Card */}
         <div className="greeting-card">
-        <div>
-          {/* <h2 className="greeting-title">Welcome, {user.name}</h2> */}
-          <h2 className="greeting-title">Welcome, Alysaa</h2>           
-          <p className="greeting-subtitle">
-            Ready to explore internships and boost your career?
-          </p>
+          <div>
+            <h2 className="greeting-title">Welcome, {user?.name || "User"}</h2>
+            <p className="greeting-subtitle">
+              Ready to explore internships and boost your career?
+            </p>
+          </div>
+          <div className="points-card">⭐ 100 Points</div>
         </div>
-        <div className="points-card">⭐ 320 Points</div>
-      </div>
+
+        {/* Stats Grid */}
         <div className="stats-grid">
           <Card className="stat-card">
             <CardHeader>
               <CardTitle>
                 <div className="card-title">
-                <Users className="icon primary" />
-                Total Candidates
+                  <Users className="icon primary" />
+                  Total Candidates
                 </div>
               </CardTitle>
             </CardHeader>
@@ -93,8 +112,8 @@ const MainDashboard = () => {
             <CardHeader>
               <CardTitle>
                 <div className="card-title">
-                <Building2 className="icon secondary" />
-                Active Opportunities
+                  <Building2 className="icon secondary" />
+                  Active Opportunities
                 </div>
               </CardTitle>
             </CardHeader>
@@ -110,9 +129,9 @@ const MainDashboard = () => {
           <Card className="stat-card">
             <CardHeader>
               <CardTitle>
-              <div className="card-title">
-                <Zap className="icon primary" />
-                Matches Made
+                <div className="card-title">
+                  <Zap className="icon primary" />
+                  Matches Made
                 </div>
               </CardTitle>
             </CardHeader>
@@ -128,10 +147,9 @@ const MainDashboard = () => {
           <Card className="stat-card">
             <CardHeader>
               <CardTitle>
-              <div className="card-title">
-
-                <Star className="icon secondary" />
-                Avg. Match Score
+                <div className="card-title">
+                  <Star className="icon secondary" />
+                  Avg. Match Score
                 </div>
               </CardTitle>
             </CardHeader>
@@ -152,57 +170,75 @@ const MainDashboard = () => {
               <CardHeader>
                 <div className="matches-header">
                   <CardTitle>Top Matches for You</CardTitle>
-                  <div className="matches-actions">
+                  {/* <div className="matches-actions">
                     <button variant="outline" size="sm">
                       <Filter className="btn-icon" /> Filter
                     </button>
                     <button variant="outline" size="sm">
                       <Search className="btn-icon" /> Search
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               </CardHeader>
               <CardContent>
-                {topMatches.map((match) => (
-                  <div key={match.id} className="match-card">
-                    <div className="match-top">
-                      <div>
-                        <h3>{match.position}</h3>
-                        <p>{match.company}</p>
+                {topMatches.length > 0 ? (
+                  topMatches.slice(0, 3).map((match) => (
+                    <div key={match.id} 
+                        className="match-card"
+                        onClick={() => navigate("/Discover")}
+                        style={{ cursor: "pointer" }}>
+                      <div className="match-top">
+                        <div>
+                          <h3>{match.position}</h3>
+                          <p>{match.company}</p>
+                        </div>
+                        <div className="match-score">
+                          <div>{match.matchScore}%</div>
+                          <small>Match Score</small>
+                        </div>
                       </div>
-                      <div className="match-score">
-                        <div>{match.matchScore}%</div>
-                        <small>Match Score</small>
-                      </div>
-                    </div>
 
-                    <div className="match-info">
-                      <MapPin className="inline-icon" />
-                      <span>{match.location}</span>
-                      <Badge variant="outline">{match.sector}</Badge>
-                    </div>
+                      <div className="match-info">
+                        <MapPin className="inline-icon" />
+                        <span className="match-location">{match.location}</span>
+                        <Badge variant="outline" className="match-sector">{match.sector}</Badge>
+                        <div className="stipend">
+                          ₹{match.stipend}/month
+                        </div>
+                      </div>
+                      
+                      <div className="match-skills">
+                        <div className="skills-progress">
+                          <span>Skills Match:</span>
+                          <Progress value={match.matchScore} />
+                        </div>
+                        <div className="skills-list">
+                          {match.skills.map((skill, index) => (
+                            <Badge
+                              className="match-skill"
+                              key={index}
+                              variant="secondary"
+                            >
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
 
-                    <div className="match-skills">
-                      <div className="skills-progress">
-                        <span>Skills Match:</span>
-                        <Progress value={match.matchScore} />
-                      </div>
-                      <div className="skills-list">
-                        {match.skills.map((skill, index) => (
-                          <Badge className="match-skill" key={index} variant="secondary">{skill} </Badge>
-                        ))}
+                      <div className="match-footer">
+                        <div className="diversity">
+                          <Star className="inline-icon secondary" />
+                          <span className="match-diversity">
+                            {match.diversity}
+                          </span>
+                        </div>
+                        <button className="match-btn">Apply Now</button>
                       </div>
                     </div>
-
-                    <div className="match-footer">
-                      <div className="diversity">
-                        <Star className="inline-icon secondary" />
-                        <span className="match-diversity">{match.diversity}</span>
-                      </div>
-                      <button className="match-btn">Apply Now</button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p>No matches found 🚫</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -216,27 +252,31 @@ const MainDashboard = () => {
               <CardContent>
                 <div className="criteria">
                   <div className="criteria-row">
-                    <span>Skills Alignment</span><span>92%</span>
+                    <span>Skills Alignment</span>
+                    <span>92%</span>
                   </div>
-                  <Progress value={92} className="progress"/>
+                  <Progress value={92} className="progress" />
                 </div>
                 <div className="criteria">
                   <div className="criteria-row">
-                    <span>Location Preference</span><span>100%</span>
+                    <span>Location Preference</span>
+                    <span>100%</span>
                   </div>
                   <Progress value={100} className="progress" />
                 </div>
                 <div className="criteria">
                   <div className="criteria-row">
-                    <span>Sector Interest</span><span>87%</span>
+                    <span>Sector Interest</span>
+                    <span>87%</span>
                   </div>
-                  <Progress value={87} className="progress"/>
+                  <Progress value={87} className="progress" />
                 </div>
                 <div className="criteria">
                   <div className="criteria-row">
-                    <span>Diversity Factors</span><span>95%</span>
+                    <span>Diversity Factors</span>
+                    <span>95%</span>
                   </div>
-                  <Progress value={95} className="progress"/>
+                  <Progress value={95} className="progress" />
                 </div>
               </CardContent>
             </Card>
@@ -247,11 +287,20 @@ const MainDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="affirmative-list">
-                  <div><span>Rural Background</span><Badge variant="secondary">Eligible</Badge></div>
-                  <div><span>Category: SC/ST</span><Badge variant="secondary">Verified</Badge></div>
-                  <div><span>First Generation Graduate</span><Badge variant="secondary">Yes</Badge></div>
+                  <div>
+                    <span>Rural Background</span>
+                    <Badge variant="secondary">Eligible</Badge>
+                  </div>
+                  <div>
+                    <span>Category: SC/ST</span>
+                    <Badge variant="secondary">Verified</Badge>
+                  </div>
+                  <div>
+                    <span>First Generation Graduate</span>
+                    <Badge variant="secondary">Yes</Badge>
+                  </div>
                 </div>
-                <button className="update-btn">Update Information</button>
+                {/* <button className="update-btn">Update Information</button> */}
               </CardContent>
             </Card>
           </div>

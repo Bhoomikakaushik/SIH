@@ -99,3 +99,9 @@
   border-top: 1px solid #334155;
   padding-top: 1rem;
 }
+
+@media (max-width: 768px) {
+  .footer-bottom{
+    margin-bottom: 2rem;
+  }
+}

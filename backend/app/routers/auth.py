@@ -5,6 +5,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..utils import hash_password, verify_password
 from ..auth import create_access_token
+from ..schemas import LoginRequest, AuthResponse
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -46,10 +47,26 @@ def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.password_hash): # type: ignore
+# @router.post("/login")
+# def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+#     user = db.query(models.User).filter(models.User.email == form_data.username).first()
+#     if not user or not verify_password(form_data.password, user.password_hash): # type: ignore
+#         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+#     token = create_access_token(data={"sub": str(user.user_id)})
+
+#     return {
+#         "access_token": token,
+#         "token_type": "bearer",
+#         "user": user,
+#     }
+
+
+
+@router.post("/login", response_model=AuthResponse)
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == request.email).first()
+    if not user or not verify_password(request.password, user.password_hash):  # type: ignore
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token(data={"sub": str(user.user_id)})
@@ -57,6 +74,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": user,
+        "user": user,  # Pydantic UserResponse will serialize this
     }
+
 

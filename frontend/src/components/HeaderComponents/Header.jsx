@@ -21,7 +21,7 @@ const Header = () => {
         <div className="header-container">
           <div className="header-left">
             <div className="logo-box">
-              <Building clasName="logo-icon" />
+              <Building className="logo-icon" />
             </div>
             <div>
               <h1 className="title">PM Internship Scheme</h1>
@@ -36,6 +36,8 @@ const Header = () => {
             <Link to="/Discover">Discover</Link>
             <Link to="/SmartAssistant">AI</Link>
           </nav>
+
+          
 
           <div className="header-right">
             <Link to="/profile">
@@ -54,11 +56,12 @@ const Header = () => {
 
       {/* Bottom nav (mobile only) */}
       <nav className="bottom-nav">
-        <Link to="/"><Home size={24} strokeWidth={3}/> <span>Home</span></Link>
-        <Link to="/Dashboard"><LayoutDashboard size={24} strokeWidth={3}/> <span>Dashboard</span></Link>
-        <Link to="/Discover"><Compass size={24} strokeWidth={3}/> <span>Discover</span></Link>
-        <Link to="/SmartAssistant"><Bot size={24} strokeWidth={3}/> <span>AI</span></Link>
+          <Link to="/"><Home size={24} strokeWidth={3}/> </Link>
+          <Link to="/Dashboard"><LayoutDashboard size={24} strokeWidth={3}/></Link>
+          <Link to="/Discover"><Compass size={24} strokeWidth={3}/></Link>
+          <Link to="/SmartAssistant"><Bot size={24} strokeWidth={3}/></Link>
       </nav>
+      
     </>
   );
 };

@@ -72,13 +72,13 @@
 }
 
 .match-top h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.35rem;
+  font-weight: 500;
   color: #111827;
 }
 
 .match-top p {
-  color: #6b7280;
+  color: #5a5e68;
 }
 
 .match-score {
@@ -91,14 +91,25 @@
 .match-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  color: #6b7280;
+  color: #5e636d;
   margin-bottom: 1rem;
 }
 
-.match-info .stipend {
+.match-location{
+  font-size: medium;
   color: #111827;
+}
+
+.match-sector{
+  margin-left: 1rem;
+  color:#111827;
+}
+
+.match-info .stipend {
+  margin-left: 1rem;
+  color: #1f2d4a;
   font-weight: 500;
+  font-size: 1.1rem;
 }
 
 .match-skills {
@@ -145,8 +156,8 @@
 }
 
 .match-skill{
-    background-color: hsla(26, 95%, 63%, 0.826);
-    color: white
+    background-color: hsla(26, 100%, 84%, 0.556);
+    color: rgb(110, 42, 12)
 }
 
 .match-footer {
@@ -208,8 +219,8 @@
   align-items: center;
   background: linear-gradient(135deg, #0560e1, #c35704cd);  border-radius: 16px;
   padding: 20px;
-  margin-top: 3rem;
-  margin-bottom: 32px;
+  /* margin-top: 3rem;
+  margin-bottom: 32px; */
   box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
   flex-wrap: wrap;
   gap: 12px;
@@ -264,6 +275,7 @@
   font-size: 0.7rem;
   color: #6b7280;
   margin-top: 0.2rem;
+  justify-content: center;
 }
 
 .icon {
@@ -397,18 +409,18 @@
 background: #007bff;  transition: width 0.3s ease;
 }
 .match-btn {
-  background: #f97316; /* bright orange */
+  background: #f97316;
   color: white;
   font-weight: 600;
   font-size: 0.9rem;
-  padding: 0.8rem 1.6rem;
+  padding: 0.4rem 1rem;
   border: none;
-  border-radius: 12px;  /* rounded corners */
+  border-radius: 12px; 
   display: inline-flex;
   align-items: center;
-  gap: 8px; /* spacing between icon and text */
+  gap: 8px; 
   cursor: pointer;
-  box-shadow: 0 4px 0 #c2410c; /* darker orange for bottom shadow */
+  box-shadow: 0 4px 0 #c2410c; 
   transition: all 0.2s ease;
 }
 
@@ -438,4 +450,104 @@ background: #007bff;  transition: width 0.3s ease;
 }
 .affirmative-card{
   margin-top: 10px;
+}
+
+
+/* 📱 Mobile Styles */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 2rem 0; /* reduce padding */
+  }
+
+  .greeting-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+    gap: 0.75rem;
+    text-align: left;
+  }
+
+  .greeting-title {
+    font-size: 1.25rem;
+  }
+
+  .greeting-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .points-card {
+    align-self: flex-start;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .main-grid {
+    grid-template-columns: 1fr; /* stack matches + side panel */
+    gap: 1rem;
+  }
+
+  .side-panel {
+    margin-top: 1rem;
+  }
+
+  .match-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .match-top h3 {
+    font-size: 1rem;
+  }
+
+  .match-score {
+    font-size: 1.2rem;
+  }
+
+  .match-info {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .match-sector,
+  .match-location,
+  .stipend {
+    font-size: 0.85rem;
+  }
+
+  button.match-btn {
+    /* width: 100%;  */
+    justify-content: center;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .skills-list {
+    gap: 0.25rem;
+  }
+
+  .match-skill {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* 📱 Extra small screens (<400px) */
+@media (max-width: 400px) {
+  .stat-card {
+    padding: 0.5rem;
+  }
+
+  .stat-number {
+    font-size: 1.25rem;
+  }
+
+  .match-btn {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+  }
+  .greeting-title {
+    font-size: 1.1rem;
+  }
 }
