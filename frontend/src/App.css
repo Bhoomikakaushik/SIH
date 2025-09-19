@@ -865,7 +865,7 @@ Vacancies section */
 .apply-btn {
   margin-top: auto;
   padding: 12px 18px;
-  background: linear-gradient(135deg, #4f7dbd, #052657);
+  background: #052657;
   color: white;
   font-size: 0.95rem;
   font-weight: 500;
@@ -973,8 +973,8 @@ Vacancies section */
   outline: none;
   font-size: 0.9rem;
   color: #1c1c1c;
-  width: 100%;     /* ✅ expand within flex item */
-  min-width: 0;    /* ✅ let them shrink */
+  width: 100%;     
+  min-width: 0;   
 }
 
 .filters input::placeholder {
@@ -1178,7 +1178,7 @@ Vacancies section */
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.15);
+  background: white;
   backdrop-filter: blur(8px);
   border-radius: 12px;
   padding: 0 12px;
@@ -1198,7 +1198,8 @@ Vacancies section */
   padding: 12px 10px;
   border: none;
   outline: none;
-  background: transparent;
+  background: white;
+  border-radius: 4px;
   color: #282727;
   font-size: 0.95rem;
 }
@@ -1388,12 +1389,6 @@ form select:focus {
   overflow: hidden;
 }
 
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 10px;
-  background: linear-gradient(to right, #2563eb, #fb923c);
-  transition: width 0.4s ease;
-}
 
 .skill-tags {
   display: flex;
@@ -1402,32 +1397,35 @@ form select:focus {
 }
 
 .tag {
-  background: #f97316;
-  color: white;
+  background: hsla(35, 93%, 72%, 0.826);
+  color: rgb(252, 251, 251);
   padding: 6px 12px;
   border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.65rem;
+  font-weight: 700;
 }
 
 .rural-note {
   font-size: 0.9rem;
-  color: #b45309;
+  color: #c57436;
   margin-top: 6px;
 }
 
 .apply-btn {
   align-self: flex-end;
-  margin-top: 10px;
-  padding: 10px 20px;
-  background: linear-gradient(to right, #3b82f6, #f97316);
+  background: #f97316; /* bright orange */
   color: white;
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.8rem 1.6rem;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;  /* rounded corners */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* spacing between icon and text */
   cursor: pointer;
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 0 #c2410c; /* darker orange for bottom shadow */
+  transition: all 0.2s ease;
 }
 
 .apply-btn:hover {
@@ -1545,20 +1543,9 @@ form select:focus {
   color: #555;
 }
 
-.apply-btn {
-  padding: 8px 16px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-top: 10px;
-}
 
-.apply-btn:hover {
-  background-color: #218838;
-}
+
+
 @media (max-width: 600px) {
   .profile-container {
     width: 100%;
@@ -1617,9 +1604,11 @@ form select:focus {
   }
 
   .apply-btn {
-    width: 100%;
+    width: 30%;
     padding: 10px;
     font-size: 14px;
+    display: flex;
+    justify-content: center;
   }
 }
 
@@ -1702,7 +1691,7 @@ form select:focus {
 .progress-bar-fill {
   height: 100%;
   width: 0;
-  background: linear-gradient(90deg, #1030cf, #d5660ae2); 
+  background: #007bff; 
   border-radius: 6px 0 0 6px;
   transition: width 0.5s ease-in-out;
 }
@@ -1710,4 +1699,7 @@ form select:focus {
 .chat-container{
   margin-top: 95px;
   height: calc(100vh - 90px);
+}
+.apply-btn:hover{
+  background: linear-gradient(135deg, #c2410c, #ea580c);
 }

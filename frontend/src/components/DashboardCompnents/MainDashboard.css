@@ -145,7 +145,7 @@
 }
 
 .match-skill{
-    background-color: hsl(26 90% 58%);
+    background-color: hsla(26, 95%, 63%, 0.826);
     color: white
 }
 
@@ -179,7 +179,7 @@
 }
 
 .affirmative-card {
-  background: linear-gradient(135deg, #2563eb, hsl(26 90% 58%));
+  background: linear-gradient(135deg, #2563eb, hsla(26, 95%, 46%, 0.534));
   color: white;
 }
 
@@ -192,7 +192,7 @@
 .update-btn {
   width: 100%;
   margin-top: 1rem;
-  background-color: hsl(26 90% 58%);
+  background-color:#f97316;
   border-radius:0.5rem;
   color: white;
   padding: 0.5rem 1rem;
@@ -303,10 +303,9 @@
   }
 }
 
-/*  Extra small (tiny screens) */
 @media (max-width: 400px) {
   .stats-grid {
-    grid-template-columns: 1fr; /* 1 card per row */
+    grid-template-columns: 1fr; 
   }
 }
 
@@ -315,7 +314,7 @@
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem; /* spacing between cards */
+  gap: 1.5rem; 
   margin: 2rem 0;
 }
 
@@ -338,7 +337,6 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
-/* Card Header */
 .stat-card .card-header {
   display: flex;
   align-items: center;
@@ -351,21 +349,19 @@
   padding: 6px;
   border-radius: 10px;
   background: #f3f4f6; 
-  color: #4f46e5; /* primary accent */
+  color: #4f46e5; 
 }
 
 .stat-card .icon.secondary {
-  color: #f59e0b; /* orange accent */
+  color: #f59e0b; 
 }
 
-/* Title */
 .stat-card .card-title {
   font-size: 1rem;
   font-weight: 600;
   color: #374151;
 }
 
-/* Stat Number */
 .stat-number {
   font-size: 2rem;
   font-weight: 700;
@@ -373,7 +369,6 @@
   color: #111827;
 }
 
-/* Subtext */
 .stat-sub {
   margin-top: 0.5rem;
   font-size: 0.875rem;
@@ -386,53 +381,61 @@
 .inline-icon {
   width: 14px;
   height: 14px;
-  color: #10b981; /* green for growth trend */
+  color: #10b981; 
 }
 
-/* Progress Wrapper */
 .progress {
-  background: #e5e7eb; /* light gray background */
+  background: #e5e7eb; 
   border-radius: 8px;
   overflow: hidden;
   height: 10px;
 }
 
-/* Progress Fill */
 .progress-bar {
   height: 100%;
   border-radius: 8px;
-  background: linear-gradient(90deg, #0560e1, #c35704cd);
-  transition: width 0.3s ease;
+background: #007bff;  transition: width 0.3s ease;
 }
 .match-btn {
-  background: linear-gradient(135deg, #0560e1, #c35704cd);
-  color: #fff;
+  background: #f97316; /* bright orange */
+  color: white;
   font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.8rem 1.6rem;
   border: none;
-  border-radius: 10px;
-  padding: 0.6rem 1.5rem;
+  border-radius: 12px;  /* rounded corners */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* spacing between icon and text */
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 0 #c2410c; /* darker orange for bottom shadow */
+  transition: all 0.2s ease;
 }
 
 .match-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: linear-gradient(135deg, #c2410c, #ea580c);
+
 }
 
 .main-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr; /* left (matches) + right (criteria) */
+  grid-template-columns: 2fr 1fr; 
   gap: 2rem;
 }
 
 @media (max-width: 768px) {
   .main-grid {
-    grid-template-columns: 1fr ; /* single column */
+    grid-template-columns: 1fr ; 
     gap: 1.5rem;
   }
 
   .side-panel {
-    margin-top: 2rem; /* push criteria below matches */
+    margin-top: 2rem; 
+    gap: 1.5rem;
   }
+}
+.affirmative-card{
+  margin-top: 10px;
 }

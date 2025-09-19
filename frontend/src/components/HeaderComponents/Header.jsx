@@ -21,7 +21,7 @@ const Header = () => {
         <div className="header-container">
           <div className="header-left">
             <div className="logo-box">
-              <Building className="logo-icon" />
+              <Building clasName="logo-icon" />
             </div>
             <div>
               <h1 className="title">PM Internship Scheme</h1>

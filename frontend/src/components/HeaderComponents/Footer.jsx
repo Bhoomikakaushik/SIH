@@ -1,68 +1,50 @@
-import React from "react";
-import "./Footer.css";
-import { Users, Building } from "lucide-react";
+import { Users, Building, Home, LayoutDashboard, Compass, Bot } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import "./Header.css";
 
-const Footer = () => {
+const Header = () => {
   return (
-    <footer className="footer">
-      <div className="footer-container">
-
-        {/* Left Section */}
-        <div className="footer-left">
-          <div className="footer-logo">
+    <>
+      {/* Top Header */}
+      <header className="header">
+        <div className="header-container">
+          <div className="header-left">
             <div className="logo-box">
               <Building className="logo-icon" />
             </div>
             <div>
-              <h3>PM Internship Scheme</h3>
-              <p>Smart Matching System</p>
+              <h1 className="title">PM Internship Scheme</h1>
+              <p className="subtitle">Smart Matching System</p>
             </div>
           </div>
-          <p className="footer-desc">
-            Empowering students with AI-driven internship matching for better career outcomes.
-          </p>
-        </div>
 
-        {/* Middle Sections */}
-        <div className="footer-links">
-          <div>
-            <h4>For Students</h4>
-            <ul>
-              <li><a href="#">Register Now</a></li>
-              <li><a href="#">Browse Opportunities</a></li>
-              <li><a href="#">Application Status</a></li>
-              <li><a href="#">Career Guidance</a></li>
-            </ul>
-          </div>
+          <nav className="nav">
+            <NavLink to="/" end>Home</NavLink>
+            <NavLink to="/Dashboard">Dashboard</NavLink>
+            <NavLink to="/Discover">Discover</NavLink>
+            <NavLink to="/SmartAssistant">AI</NavLink>
+          </nav>
 
-          <div>
-            <h4>For Employers</h4>
-            <ul>
-              <li><a href="#">Post Opportunities</a></li>
-              <li><a href="#">View Candidates</a></li>
-              <li><a href="#">Analytics Dashboard</a></li>
-              <li><a href="#">Partner with Us</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4>Support</h4>
-            <ul>
-              <li><a href="#">Help Center</a></li>
-              <li><a href="#">Contact Us</a></li>
-              <li><a href="#">Privacy Policy</a></li>
-              <li><a href="#">Terms of Service</a></li>
-            </ul>
+          <div className="header-right">
+            <NavLink to="/profile">
+              <button className="profile-btn">
+                <Users className="btn-icon" />
+                Profile
+              </button>
+            </NavLink>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Bottom Text */}
-      <div className="footer-bottom">
-        <p>© 2025 PM Internship Scheme - Smart Matching System. All rights reserved.</p>
-      </div>
-    </footer>
+      {/* Bottom nav (mobile only) */}
+      <nav className="bottom-nav">
+        <NavLink to="/" end><Home size={24} strokeWidth={3}/> <span>Home</span></NavLink>
+        <NavLink to="/Dashboard"><LayoutDashboard size={24} strokeWidth={3}/> <span>Dashboard</span></NavLink>
+        <NavLink to="/Discover"><Compass size={24} strokeWidth={3}/> <span>Discover</span></NavLink>
+        <NavLink to="/SmartAssistant"><Bot size={24} strokeWidth={3}/> <span>AI</span></NavLink>
+      </nav>
+    </>
   );
 };
 
-export default Footer;
+export default Header;

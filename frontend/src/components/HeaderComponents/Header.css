@@ -1,5 +1,5 @@
 .header {
-  background: var(--card);
+background: var(--card);
   background-color: rgba(var(--card-rgb), 0.8);
   backdrop-filter: blur(6px); 
   border-top: 1px solid var(--border); 
@@ -11,10 +11,10 @@
   left:0;
   right:0;
   z-index: 50;
+
 }
 
 .header-container {
-  /* max-width: 1200px; */
   width:100%;
   margin: 0 auto;
   padding: 1rem;
@@ -22,6 +22,7 @@
   align-items: center;
   justify-content: space-between;
   gap:2rem;
+
 }
 
 .header-left {
@@ -45,12 +46,14 @@
 .title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--foreground);
+  /* color: var(--foreground); */
+  text-shadow: none !important;  /* 🔥 removes glow */
+
 }
 
 .subtitle {
   font-size: 0.875rem;
-  color: var(--muted-foreground);
+  /* color: var(--muted-foreground); */
 }
 
 .nav {
@@ -58,14 +61,10 @@
   margin-right: 80px;
 }
 
-.nav a {
-  margin-left: 1.5rem;
-  color: var(--foreground);
-  text-decoration: none;
-  transition: color 0.3s ease;
-  font-weight: 550;
-  gap: 0.45rem;
-  color: rgb(3, 47, 245);
+a {
+  text-shadow: none !important;
+  box-shadow: none;
+
 }
 
 .nav a:hover {
@@ -94,14 +93,22 @@
 .profile-btn {
   display: flex;
   align-items: center;
-  background: linear-gradient(to right, #3b82f6, hsl(26 90% 58%));
-  border: 1px solid rgba(128, 128, 128, 0.549);
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  color: rgb(255, 255, 255);
+  align-self: flex-end;
+  background: #f97316; /* bright orange */
+  color: white;
+  font-weight: 600;
+  font-size: rem;
+  padding: 0.8rem 1.6rem;
+  border: none;
+  border-radius: 12px;  /* rounded corners */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* spacing between icon and text */
   cursor: pointer;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-  font-weight: 500;
+  box-shadow: 0 4px 0 #c2410c; 
+  transition: all 0.2s ease;
+  text-shadow: none !important;  /* 🔥 removes glow */
+
 }
 
 .profile-btn:hover {
@@ -120,12 +127,13 @@
   background-color: rgba(var(--card-rgb), 0.8);
   backdrop-filter: blur(6px); 
   border-top: 1px solid var(--border); 
-  box-shadow: var(--shadow-soft);
   display: flex;
   justify-content: space-around;
   padding: 0.5rem 0;
   z-index: 50;
-  color: rgb(235, 108, 11);
+  color: rgb(11, 119, 235);
+  text-shadow: none !important;  /* 🔥 removes glow */
+  box-shadow: none;
 }
 
 .bottom-nav a {
@@ -154,3 +162,15 @@
     color: rgb(0, 51, 255);
   }
 }
+
+.nav a {
+  margin-left: 1.25rem;
+  color: var(--foreground);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+  text-shadow: none !important;  /* 🔥 removes glow */
+}
+
+

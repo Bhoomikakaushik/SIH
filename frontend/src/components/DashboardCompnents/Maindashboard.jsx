@@ -16,6 +16,7 @@ import "./MainDashboard.css";
 import { useContext } from "react";
 import { AuthContext } from "../../AuthContext.jsx";
 
+
 const MainDashboard = () => {
   const topMatches = [
     {
@@ -58,14 +59,7 @@ const MainDashboard = () => {
   return (
     <section className="dashboard">
       <div className="dashboard-container">
-        {/* <div className="dashboard-header">
-          <h2>AI-Powered Matching Dashboard</h2>
-          <p>
-            Real-time intelligent matching with affirmative action considerations
-          </p>
-        </div> */}
-
-        {/* Stats Section */}
+        
         <div className="greeting-card">
         <div>
           {/* <h2 className="greeting-title">Welcome, {user.name}</h2> */}
@@ -186,7 +180,6 @@ const MainDashboard = () => {
                       <MapPin className="inline-icon" />
                       <span>{match.location}</span>
                       <Badge variant="outline">{match.sector}</Badge>
-                      <span className="stipend">{match.stipend}</span>
                     </div>
 
                     <div className="match-skills">
