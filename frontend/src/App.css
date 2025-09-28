@@ -256,6 +256,7 @@ form input:focus {
   box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
 }
 
+
 .form-options {
   display: flex;
   justify-content: space-between;
@@ -621,6 +622,7 @@ Vacancies section */
   display: flex;
   flex-direction: column;
   height: 80vh;
+  /* height: calc(100vh - 90px); */
   width: 100%;
   max-width: 600px;
   margin: 20px auto;
@@ -697,6 +699,7 @@ Vacancies section */
   /* padding-top: 90px;  */
   /* padding-left: 1rem;
   padding-right: 1rem; */
+  gap:2rem;
   padding: 1rem;
   box-sizing: border-box;
 }
@@ -774,6 +777,7 @@ Vacancies section */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap:1rem;
 }
 
 .internship-card:hover {
@@ -1274,8 +1278,9 @@ form select {
   margin-bottom: 16px;
   border-radius: 8px;
   border: 1px solid #94a3b8;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  /* background-color:white; */
+  background:transparent;
+  color: black;
   font-size: 14px;
   outline: none;
 }
@@ -1711,10 +1716,7 @@ form select:focus {
   transition: width 0.5s ease-in-out;
 }
 
-.chat-container{
-  margin-top: 95px;
-  height: calc(100vh - 90px);
-}
+
 .apply-btn:hover{
   background: linear-gradient(135deg, #c2410c, #ea580c);
 }

@@ -15,7 +15,6 @@ import {
 import "./MainDashboard.css";
 import { AuthContext } from "../../AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
-
 // 🔹 Convert backend final_score (0–1) to % 
 const normalizeScore = (score) => Math.round(score * 100);
 
@@ -23,6 +22,7 @@ const MainDashboard = () => {
   const [topMatches, setTopMatches] = useState([]);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [lang, setLang] = useState("en");
 
   // Fetch internships from backend
   useEffect(() => {
@@ -78,14 +78,25 @@ const MainDashboard = () => {
     <section className="dashboard">
       <div className="dashboard-container">
         {/* Greeting Card */}
-        <div className="greeting-card">
-          <div>
-            <h2 className="greeting-title">Welcome, {user?.name || "User"}</h2>
-            <p className="greeting-subtitle">
-              Ready to explore internships and boost your career?
-            </p>
+        <div className="language-greeting">
+          <div className="greeting-card">
+            <div>
+              <h2 className="greeting-title">Welcome, {user?.name || "User"}</h2>
+              <p className="greeting-subtitle">
+                Ready to explore internships and boost your career?
+              </p>
+            </div>
+            <div className="points-card">⭐ 100 Points</div>          
           </div>
-          <div className="points-card">⭐ 100 Points</div>
+          <div className="lang-dropdown">
+              <select value={lang} onChange={(e) => setLang(e.target.value)}>
+                <option value="en">English</option>
+                  <option value="hi">हिन्दी</option>
+                  <option value="bn">বাংলা</option> 
+                  <option value="mr">मराठी</option>
+                  <option value="gu">ગુજરાતી</option>
+              </select>
+          </div>
         </div>
 
         {/* Stats Grid */}

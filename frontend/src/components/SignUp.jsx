@@ -109,8 +109,7 @@ const SignUpPage = () => {
             <input type="date" name="dob" value={formData.dob} onChange={handleChange} required />
 
             <label>Gender</label>
-            <select name="gender" value={formData.gender} onChange={handleChange} required>
-              <option value="">Select Gender</option>
+            <select name="gender" value={formData.gender} placeholder="Select Gender" onChange={handleChange} required>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>
