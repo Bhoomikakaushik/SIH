@@ -13,6 +13,8 @@ const SignUpPage = () => {
     dob: "",
     gender: "",
     education_level: "",
+    title:"",
+    domain:"",
     region: "",
     location: "",
     skills: "",
@@ -42,6 +44,8 @@ const SignUpPage = () => {
       dob: formData.dob,
       gender: formData.gender,
       education_level: formData.education_level,
+      title:formData.title,
+      domain:formData.domain,
       region: formData.region,
       location: formData.location ? [formData.location] : [],
       skills: formData.skills ? formData.skills.split(",").map((s) => s.trim()) : [],
@@ -122,6 +126,15 @@ const SignUpPage = () => {
               placeholder="E.g. B.Tech, B.Sc, etc."
             />
 
+            <label>Title</label>
+            <input
+              type="text"
+              name="title"
+              // value={formData.skills}
+              // onChange={handleChange}
+              placeholder="Web Development"
+            />
+
             <label>Region</label>
             <select name="region" value={formData.region} onChange={handleChange} required>
               <option value="">Select Region</option>
@@ -140,6 +153,17 @@ const SignUpPage = () => {
               onChange={handleChange}
               placeholder="E.g. React, Python, Excel"
             />
+
+            <label>Domain</label>
+            <input
+              type="text"
+              name="domain"
+              // value={formData.skills}
+              // onChange={handleChange}
+              placeholder="Web Development"
+            />
+
+
 
             <button type="submit" className="login-btn" disabled={loading}>
               {loading ? "Signing up..." : "Sign Up"}

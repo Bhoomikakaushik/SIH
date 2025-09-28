@@ -15,7 +15,6 @@ venv/
 # Database/CSV files (optional, keep only if you want to version control them)
 *.db
 *.sqlite3
-*.csv
 
 # Editor/OS
 .vscode/
