@@ -8,28 +8,38 @@ import torch
 
 class InternshipSearchEngine:
     def __init__(self, dataframe):
+
+        import pickle
+        from scipy import sparse
         self.df = dataframe.copy().reset_index(drop=True) # Ensure clean integer index
-            
+
         # Determine the device to use (GPU if available, otherwise CPU)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print(f"Using device: {self.device}")
 
         # Load the model onto the chosen device
         self.bert_model = SentenceTransformer('all-MiniLM-L6-v2', device=self.device)
-        
-        # --- Initialize vectorizers ---
-        self.title_vectorizer = TfidfVectorizer(stop_words='english', min_df=2, max_df=0.95)
-        self.location_vectorizer = TfidfVectorizer(stop_words='english', min_df=2, max_df=0.95)
-        self.degree_vectorizer = TfidfVectorizer(stop_words='english', min_df=1)
-        
-        # --- Pre-compute and index everything once ---
+
+        # --- Load precomputed TF-IDF vectorizers and matrices ---
+        with open("app/title_vectorizer.pkl", "rb") as f:
+            self.title_vectorizer = pickle.load(f)
+        with open("app/location_vectorizer.pkl", "rb") as f:
+            self.location_vectorizer = pickle.load(f)
+        with open("app/degree_vectorizer.pkl", "rb") as f:
+            self.degree_vectorizer = pickle.load(f)
+
+        self.title_tfidf = sparse.load_npz("app/title_tfidf.npz")
+        self.location_tfidf = sparse.load_npz("app/location_tfidf.npz")
+        self.degree_tfidf = sparse.load_npz("app/degree_tfidf.npz")
+
+        # --- Pre-compute and index everything else (embeddings) ---
         self._prepare_indices()
 
     def _prepare_indices(self):
         """
-        Pre-computes all embeddings and TF-IDF matrices.
+        Pre-computes all embeddings (TF-IDF is now loaded from disk).
         """
-        print("Preparing search engine: generating embeddings and TF-IDF matrices...")
+        print("Preparing search engine: generating embeddings...")
         start_time = time.time()
 
         # --- Semantic Part: Pre-compute ALL embeddings in a single batch ---
@@ -40,7 +50,7 @@ class InternshipSearchEngine:
             show_progress_bar=True,
             device=self.device
         )
-        
+
         print("Encoding domains...")
         self.domain_embeddings = self.bert_model.encode(
             self.df['domain'].tolist(), 
@@ -48,13 +58,7 @@ class InternshipSearchEngine:
             show_progress_bar=True,
             device=self.device
         )
-        
-        # --- Lexical Part: TF-IDF matrices ---
-        print("Fitting TF-IDF vectorizers...")
-        self.title_tfidf = self.title_vectorizer.fit_transform(self.df['title'].astype(str))
-        self.location_tfidf = self.location_vectorizer.fit_transform(self.df['location'].astype(str))
-        self.degree_tfidf = self.degree_vectorizer.fit_transform(self.df['degree'].astype(str))
-        
+
         end_time = time.time()
         print(f"Preparation complete. Took {end_time - start_time:.2f} seconds.")
 
