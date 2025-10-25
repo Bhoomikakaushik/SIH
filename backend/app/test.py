@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import normalize as sk_normalize
 from sentence_transformers import SentenceTransformer, util
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -49,6 +50,20 @@ class InternshipSearchEngine:
             # compute and save indices for future runs (if folder provided)
             self._prepare_indices(save_indices=True if self.indices_dir else False)
 
+    def _normalize_rows_chunked(self, mat, chunk_size=2000):
+        """
+        Normalize rows of mat to unit vectors in float32, processing in chunks to limit peak memory.
+        Returns a new (n,d) float32 ndarray.
+        """
+        n, d = mat.shape
+        out = np.empty((n, d), dtype=np.float32)
+        for i in range(0, n, chunk_size):
+            j = min(i + chunk_size, n)
+            block = np.asarray(mat[i:j], dtype=np.float32)
+            norms = np.linalg.norm(block, axis=1, keepdims=True) + 1e-8
+            out[i:j] = block / norms
+        return out
+
     def _load_indices(self):
         """
         Load precomputed embeddings/vectorizers/matrices from indices_dir.
@@ -74,15 +89,29 @@ class InternshipSearchEngine:
         self.skills_embeddings = np.load(skill_file, mmap_mode='r')
         self.domain_embeddings = np.load(domain_file, mmap_mode='r')
 
+        # Precompute and store normalized versions (chunked to avoid memory spikes)
+        try:
+            self.skills_embeddings_norm = self._normalize_rows_chunked(self.skills_embeddings)
+            self.domain_embeddings_norm = self._normalize_rows_chunked(self.domain_embeddings)
+        except Exception:
+            # fallback: convert and normalize straightforwardly (may use more memory)
+            self.skills_embeddings_norm = np.asarray(self.skills_embeddings, dtype=np.float32)
+            self.skills_embeddings_norm /= (np.linalg.norm(self.skills_embeddings_norm, axis=1, keepdims=True) + 1e-8)
+            self.domain_embeddings_norm = np.asarray(self.domain_embeddings, dtype=np.float32)
+            self.domain_embeddings_norm /= (np.linalg.norm(self.domain_embeddings_norm, axis=1, keepdims=True) + 1e-8)
+
         # load vectorizers
         self.title_vectorizer = joblib.load(title_vec_file)
         self.location_vectorizer = joblib.load(location_vec_file)
         self.degree_vectorizer = joblib.load(degree_vec_file)
 
-        # load TF-IDF sparse matrices
+        # load TF-IDF sparse matrices and normalize rows to unit norm (in-place copy=False)
         self.title_tfidf = sparse.load_npz(title_tfidf_file)
         self.location_tfidf = sparse.load_npz(location_tfidf_file)
         self.degree_tfidf = sparse.load_npz(degree_tfidf_file)
+        sk_normalize(self.title_tfidf, norm='l2', axis=1, copy=False)
+        sk_normalize(self.location_tfidf, norm='l2', axis=1, copy=False)
+        sk_normalize(self.degree_tfidf, norm='l2', axis=1, copy=False)
 
         return True
 
@@ -109,7 +138,6 @@ class InternshipSearchEngine:
         )
         self.skills_embeddings = np.asarray(self.skills_embeddings, dtype=np.float32)
 
-        print("Encoding domains...")
         self.domain_embeddings = self.bert_model.encode(
             self.df['domain'].tolist(),
             convert_to_tensor=False,
@@ -118,11 +146,19 @@ class InternshipSearchEngine:
         )
         self.domain_embeddings = np.asarray(self.domain_embeddings, dtype=np.float32)
 
+        # normalize immediately (chunked)
+        self.skills_embeddings_norm = self._normalize_rows_chunked(self.skills_embeddings)
+        self.domain_embeddings_norm = self._normalize_rows_chunked(self.domain_embeddings)
+
         # --- Lexical Part: TF-IDF matrices ---
-        print("Fitting TF-IDF vectorizers...")
         self.title_tfidf = self.title_vectorizer.fit_transform(self.df['title'].astype(str))
         self.location_tfidf = self.location_vectorizer.fit_transform(self.df['location'].astype(str))
         self.degree_tfidf = self.degree_vectorizer.fit_transform(self.df['degree'].astype(str))
+
+        # normalize TF-IDF rows
+        sk_normalize(self.title_tfidf, norm='l2', axis=1, copy=False)
+        sk_normalize(self.location_tfidf, norm='l2', axis=1, copy=False)
+        sk_normalize(self.degree_tfidf, norm='l2', axis=1, copy=False)
 
         # --- Optionally save to disk for future runs ---
         if save_indices and self.indices_dir:
@@ -143,114 +179,98 @@ class InternshipSearchEngine:
         end_time = time.time()
         print(f"Preparation complete. Took {end_time - start_time:.2f} seconds.")
 
-    def search(self, query, user_details, top_k=5):
+    def search(self, query, user_details, top_k=5, candidate_pool=200):
         """
         Performs a search using pre-computed indices.
+        candidate_pool: number of top candidates to fetch from semantic/title signals before final ranking.
         """
-        scores_df = pd.DataFrame(index=self.df.index)
-
-        # helper: ensure model loaded lazily and on CPU
+        n = len(self.df)
+        # ensure model loaded lazily and on CPU
         if self.bert_model is None:
             from sentence_transformers import SentenceTransformer
             self.bert_model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
 
-        def _cosine_sim_numpy(query_vec, matrix):
-            # query_vec: 1D numpy (d,), matrix: (n,d)
+        # fast dot-based cosine helpers (assume embeddings already unit-normalized)
+        def _dot_cosine_normed(query_vec, matrix_normed):
             q = np.asarray(query_vec, dtype=np.float32)
-            m = np.asarray(matrix, dtype=np.float32)
-            q_norm = q / (np.linalg.norm(q) + 1e-8)
-            m_norms = np.linalg.norm(m, axis=1, keepdims=True) + 1e-8
-            m_norm = m / m_norms
-            return m_norm.dot(q_norm)
+            q = q / (np.linalg.norm(q) + 1e-8)
+            return matrix_normed.dot(q)  # (n,)
 
-        # --- Semantic Search: skills ---
+        # compute per-signal scores (numpy arrays)
+        skills_scores = np.zeros(n, dtype=np.float32)
+        domain_scores = np.zeros(n, dtype=np.float32)
+        title_scores = np.zeros(n, dtype=np.float32)
+        location_scores = np.zeros(n, dtype=np.float32)
+        degree_scores = np.zeros(n, dtype=np.float32)
+
+        # semantic: skills
         skills_query = query.get('skills')
         if skills_query:
             if isinstance(skills_query, list):
                 skills_query = " ".join(skills_query)
-            skills_query = str(skills_query)
             skills_query_embedding = self.bert_model.encode(skills_query, convert_to_tensor=False, device='cpu')
-            skills_scores = _cosine_sim_numpy(skills_query_embedding, self.skills_embeddings)
-            scores_df['skills_score'] = skills_scores
-        else:
-            scores_df['skills_score'] = 0.0
+            skills_scores = _dot_cosine_normed(skills_query_embedding, self.skills_embeddings_norm)
 
-        # --- Semantic Search: domain ---
+        # semantic: domain
         domain_query = query.get('domain')
         if domain_query:
             if isinstance(domain_query, list):
                 domain_query = " ".join(domain_query)
-            domain_query = str(domain_query)
-            domain_query_embedding = self.bert_model.encode(domain_query, convert_to_tensor=False, device='cpu')
-            domain_scores = _cosine_sim_numpy(domain_query_embedding, self.domain_embeddings)
-            scores_df['domain_score'] = domain_scores
-        else:
-            scores_df['domain_score'] = 0.0
+            domain_query_embedding = self.bert_model.encode(str(domain_query), convert_to_tensor=False, device='cpu')
+            domain_scores = _dot_cosine_normed(domain_query_embedding, self.domain_embeddings_norm)
 
-        # --- Lexical Search: title ---
+        # lexical: title/location/degree (TF-IDF matrices already normalized row-wise)
         title_query = query.get('title')
         if title_query:
             if isinstance(title_query, list):
                 title_query = " ".join(title_query)
-            title_query = str(title_query)
-            query_title_vec = self.title_vectorizer.transform([title_query])
-            scores_df['title_score'] = cosine_similarity(query_title_vec, self.title_tfidf).flatten()
-        else:
-            scores_df['title_score'] = 0.0
+            qtv = self.title_vectorizer.transform([str(title_query)])
+            qtv = sk_normalize(qtv, norm='l2', axis=1, copy=True)
+            title_scores = cosine_similarity(qtv, self.title_tfidf).ravel()
 
-        # --- Lexical Search: location ---
         location_query = query.get('location')
         if location_query:
             if isinstance(location_query, list):
                 location_query = " ".join(location_query)
-            location_query = str(location_query)
-            query_location_vec = self.location_vectorizer.transform([location_query])
-            scores_df['location_score'] = cosine_similarity(query_location_vec, self.location_tfidf).flatten()
-        else:
-            scores_df['location_score'] = 0.0
+            qlv = self.location_vectorizer.transform([str(location_query)])
+            qlv = sk_normalize(qlv, norm='l2', axis=1, copy=True)
+            location_scores = cosine_similarity(qlv, self.location_tfidf).ravel()
 
-        # --- Lexical Search: degree ---
         degree_query = query.get('degree')
         if degree_query:
             if isinstance(degree_query, list):
                 degree_query = " ".join(degree_query)
-            degree_query = str(degree_query)
-            query_degree_vec = self.degree_vectorizer.transform([degree_query])
-            scores_df['degree_score'] = cosine_similarity(query_degree_vec, self.degree_tfidf).flatten()
+            qdv = self.degree_vectorizer.transform([str(degree_query)])
+            qdv = sk_normalize(qdv, norm='l2', axis=1, copy=True)
+            degree_scores = cosine_similarity(qdv, self.degree_tfidf).ravel()
+
+        # weights (normalized)
+        raw_weights = np.array([0.7, 0.2, 0.3, 0.1, 0.05], dtype=np.float32)
+        weights = raw_weights / raw_weights.sum()
+
+        # final score computed as numpy vector
+        final_score = (weights[0] * skills_scores +
+                       weights[1] * domain_scores +
+                       weights[2] * title_scores +
+                       weights[3] * location_scores +
+                       weights[4] * degree_scores)
+
+        # candidate pruning: keep only top `candidate_pool` by final_score, then sort
+        k = min(top_k, candidate_pool, n)
+        if n <= k:
+            top_idx = np.argsort(-final_score)[:top_k]
         else:
-            scores_df['degree_score'] = 0.0
+            part = np.argpartition(final_score, -k)[-k:]
+            top_idx = part[np.argsort(-final_score[part])][:top_k]
 
-        raw_weights = {
-            'skills': 0.7,
-            'domain': 0.2,
-            'title': 0.3,
-            'location': 0.1,
-            'degree': 0.05
-        }
+        # build results using indices only (avoid constructing full DataFrame)
+        results_df = self.df.iloc[top_idx].copy()
+        results_df = results_df.assign(final_score=final_score[top_idx])
 
-        total = sum(raw_weights.values())
-        weights = {k: v / total for k, v in raw_weights.items()}  # normalize to sum=1
+        recommendations = results_df[['title', 'location', 'skills', 'domain', 'final_score',
+                                      'company_name', 'stipend', 'duration', 'workmode']].to_dict(orient='records')
 
-        scores_df['final_score'] = (
-            weights['skills'] * scores_df['skills_score'] +
-            weights['domain'] * scores_df['domain_score'] +
-            weights['title'] * scores_df['title_score'] +
-            weights['location'] * scores_df['location_score'] +
-            weights['degree'] * scores_df['degree_score']
-        )
-
-        # --- Combine scores with original data and return results ---
-        results_df = self.df.join(scores_df)
-        results = results_df.sort_values(by='final_score', ascending=False).head(top_k)
-
-        recommendations = results[['title', 'location', 'skills', 'domain', 'final_score', 
-                                'company_name', 'stipend', 'duration', 'workmode']].to_dict(orient='records')
-
-        response = {
-            "user": user_details,
-            "recommendations": recommendations
-        }
-        return response
+        return {"user": user_details, "recommendations": recommendations}
 
 
 
