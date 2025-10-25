@@ -8,24 +8,26 @@ import torch
 from pathlib import Path
 import joblib
 from scipy import sparse
+import os
 
 class InternshipSearchEngine:
     def __init__(self, dataframe, indices_dir=None, use_precomputed=True):
         self.df = dataframe.copy().reset_index(drop=True)  # Ensure clean integer index
 
-        # Determine the device to use (GPU if available, otherwise CPU)
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # CONTROL: force CPU in restricted envs (set FORCE_CPU=1 in environ to force CPU)
+        use_cuda = torch.cuda.is_available() and os.getenv("FORCE_CPU", "0") != "1"
+        self.device = 'cuda' if use_cuda else 'cpu'
         print(f"Using device: {self.device}")
 
-        # Load the model onto the chosen device (needed to encode queries at search time)
-        self.bert_model = SentenceTransformer('all-MiniLM-L6-v2', device=self.device)
+        # Lazy load model only when needed (avoid loading large model at init)
+        self.bert_model = None
 
         # Where precomputed indices are stored
         self.indices_dir = Path(indices_dir) if indices_dir else Path(__file__).parent / "indices"
 
-        # placeholders (will be set either by loading or by computing)
-        self.skills_embeddings = None
-        self.domain_embeddings = None
+        # placeholders (use numpy memmap / arrays, avoid moving to GPU)
+        self.skills_embeddings = None        # numpy memmap/ndarray
+        self.domain_embeddings = None        # numpy memmap/ndarray
         self.title_vectorizer = TfidfVectorizer(stop_words='english', min_df=2, max_df=0.95)
         self.location_vectorizer = TfidfVectorizer(stop_words='english', min_df=2, max_df=0.95)
         self.degree_vectorizer = TfidfVectorizer(stop_words='english', min_df=1)
@@ -50,6 +52,7 @@ class InternshipSearchEngine:
     def _load_indices(self):
         """
         Load precomputed embeddings/vectorizers/matrices from indices_dir.
+        Use numpy mmap for embeddings to reduce memory pressure.
         Returns True on success, False otherwise.
         """
         idx = self.indices_dir
@@ -67,11 +70,9 @@ class InternshipSearchEngine:
         if not all(p.exists() for p in required):
             return False
 
-        # load numpy embeddings and convert to torch tensors on the chosen device
-        skills_np = np.load(skill_file)
-        domain_np = np.load(domain_file)
-        self.skills_embeddings = torch.from_numpy(skills_np).to(self.device)
-        self.domain_embeddings = torch.from_numpy(domain_np).to(self.device)
+        # load numpy embeddings using mmap (keeps memory usage low)
+        self.skills_embeddings = np.load(skill_file, mmap_mode='r')
+        self.domain_embeddings = np.load(domain_file, mmap_mode='r')
 
         # load vectorizers
         self.title_vectorizer = joblib.load(title_vec_file)
@@ -94,21 +95,28 @@ class InternshipSearchEngine:
         start_time = time.time()
 
         # --- Semantic Part: Pre-compute ALL embeddings in a single batch ---
-        print("Encoding skills...")
+        print("Encoding skills (this will load the model)...")
+        # lazy load model (force CPU to avoid GPU memory pressure in deployments)
+        if self.bert_model is None:
+            from sentence_transformers import SentenceTransformer
+            self.bert_model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
+
         self.skills_embeddings = self.bert_model.encode(
             self.df['skills'].tolist(),
-            convert_to_tensor=True,
+            convert_to_tensor=False,
             show_progress_bar=True,
-            device=self.device
+            device='cpu'
         )
+        self.skills_embeddings = np.asarray(self.skills_embeddings, dtype=np.float32)
 
         print("Encoding domains...")
         self.domain_embeddings = self.bert_model.encode(
             self.df['domain'].tolist(),
-            convert_to_tensor=True,
+            convert_to_tensor=False,
             show_progress_bar=True,
-            device=self.device
+            device='cpu'
         )
+        self.domain_embeddings = np.asarray(self.domain_embeddings, dtype=np.float32)
 
         # --- Lexical Part: TF-IDF matrices ---
         print("Fitting TF-IDF vectorizers...")
@@ -119,8 +127,9 @@ class InternshipSearchEngine:
         # --- Optionally save to disk for future runs ---
         if save_indices and self.indices_dir:
             self.indices_dir.mkdir(parents=True, exist_ok=True)
-            np.save(self.indices_dir / "skills_embeddings.npy", self.skills_embeddings.cpu().numpy())
-            np.save(self.indices_dir / "domain_embeddings.npy", self.domain_embeddings.cpu().numpy())
+            # save as float32 (smaller)
+            np.save(self.indices_dir / "skills_embeddings.npy", self.skills_embeddings.astype(np.float32))
+            np.save(self.indices_dir / "domain_embeddings.npy", self.domain_embeddings.astype(np.float32))
             joblib.dump(self.title_vectorizer, self.indices_dir / "title_vectorizer.joblib")
             joblib.dump(self.location_vectorizer, self.indices_dir / "location_vectorizer.joblib")
             joblib.dump(self.degree_vectorizer, self.indices_dir / "degree_vectorizer.joblib")
@@ -140,15 +149,29 @@ class InternshipSearchEngine:
         """
         scores_df = pd.DataFrame(index=self.df.index)
 
+        # helper: ensure model loaded lazily and on CPU
+        if self.bert_model is None:
+            from sentence_transformers import SentenceTransformer
+            self.bert_model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
+
+        def _cosine_sim_numpy(query_vec, matrix):
+            # query_vec: 1D numpy (d,), matrix: (n,d)
+            q = np.asarray(query_vec, dtype=np.float32)
+            m = np.asarray(matrix, dtype=np.float32)
+            q_norm = q / (np.linalg.norm(q) + 1e-8)
+            m_norms = np.linalg.norm(m, axis=1, keepdims=True) + 1e-8
+            m_norm = m / m_norms
+            return m_norm.dot(q_norm)
+
         # --- Semantic Search: skills ---
         skills_query = query.get('skills')
         if skills_query:
             if isinstance(skills_query, list):
                 skills_query = " ".join(skills_query)
             skills_query = str(skills_query)
-            skills_query_embedding = self.bert_model.encode(skills_query, convert_to_tensor=True, device=self.device)
-            skills_scores = util.cos_sim(skills_query_embedding, self.skills_embeddings).squeeze() # type: ignore
-            scores_df['skills_score'] = skills_scores.cpu().numpy()
+            skills_query_embedding = self.bert_model.encode(skills_query, convert_to_tensor=False, device='cpu')
+            skills_scores = _cosine_sim_numpy(skills_query_embedding, self.skills_embeddings)
+            scores_df['skills_score'] = skills_scores
         else:
             scores_df['skills_score'] = 0.0
 
@@ -158,9 +181,9 @@ class InternshipSearchEngine:
             if isinstance(domain_query, list):
                 domain_query = " ".join(domain_query)
             domain_query = str(domain_query)
-            domain_query_embedding = self.bert_model.encode(domain_query, convert_to_tensor=True, device=self.device)
-            domain_scores = util.cos_sim(domain_query_embedding, self.domain_embeddings).squeeze() # type: ignore
-            scores_df['domain_score'] = domain_scores.cpu().numpy()
+            domain_query_embedding = self.bert_model.encode(domain_query, convert_to_tensor=False, device='cpu')
+            domain_scores = _cosine_sim_numpy(domain_query_embedding, self.domain_embeddings)
+            scores_df['domain_score'] = domain_scores
         else:
             scores_df['domain_score'] = 0.0
 
