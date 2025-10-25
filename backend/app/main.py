@@ -5,6 +5,8 @@ from app.database import engine
 from dotenv import load_dotenv
 import os
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -25,9 +27,20 @@ app.add_middleware(
     allow_headers=["*"],           
 )
 
-app.include_router(items.router)
-app.include_router(auth.router)
-app.include_router(search.router)
+# Mount API routers under /api so SPA mount won't shadow them
+app.include_router(items.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+app.include_router(search.router, prefix="/api")
+
+# Serve built frontend from frontend/dist (project root relative)
+project_root = Path(__file__).resolve().parents[2]
+dist_dir = project_root / "frontend" / "dist"
+
+if dist_dir.exists():
+    app.mount("/", StaticFiles(directory=str(dist_dir), html=True), name="frontend")
+else:
+    # If dist is not present, app will still start but frontend won't be served.
+    print(f"Frontend dist not found at {dist_dir!s}; frontend will not be served by FastAPI.")
 
 @app.get("/")
 def read_root():
